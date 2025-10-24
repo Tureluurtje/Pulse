@@ -1,4 +1,5 @@
 {
+    "version": "0.2.0",
     "configurations": [
         {
             "name": "Python Debugger: FastAPI",
@@ -11,6 +12,17 @@
             ],
             "jinja": true,
             "cwd": "${workspaceFolder}/backend/"
+        },
+        {
+            "name": "Python: Debug Tests (pytest)",
+            "type": "python",
+            "request": "test",
+            "purpose": ["debug-test"],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/backend"
+            },
+            "console": "integratedTerminal"
         }
     ]
 }

@@ -1,4 +1,8 @@
-backend/config.py
+
 venv/
 __pycache__/
 *.py[codz]
+.env
+
+// Files to work out
+docs/ws_protocol.md
