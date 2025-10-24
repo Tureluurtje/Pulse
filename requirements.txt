@@ -1,6 +1,7 @@
 argon2==0.1.10
 fastapi==0.120.0
 httpx==0.28.1
+psycopg2==2.9.11
 pydantic==2.12.3
 PyJWT==2.10.1
 PyJWT==2.10.1
