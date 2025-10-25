@@ -15,10 +15,12 @@ from typing import Optional
 # Load root .env if present (project root). Use parent directories to be robust
 ROOT = Path(__file__).resolve().parents[1]
 dotenv_path = ROOT / ".env"
-if not dotenv_path.exists():
-    raise FileNotFoundError(f".env file not found at {dotenv_path}")
-
-load_dotenv(dotenv_path)
+if dotenv_path.exists():
+    load_dotenv(dotenv_path)
+else:
+    # If running in CI / env vars are already set, don't fail
+    if not os.getenv("DB_USERNAME") or not os.getenv("DB_***REMOVED***"):
+        raise FileNotFoundError(f".env file not found at {dotenv_path} and DB credentials are missing")
 
 def require_env(name: str, default: Optional[str] = None) -> str:
     value = os.getenv(name, default)

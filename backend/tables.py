@@ -29,7 +29,6 @@ def import_all_models(package: ModuleType) -> None:
 		if not name.startswith("__"):
 			import_module(name=f"{package_name}.{name}")
 
-
 if __name__ == "__main__":
 	print("Importing model modules...")
 	import_all_models(package=models_pkg)
