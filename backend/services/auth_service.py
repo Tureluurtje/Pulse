@@ -89,7 +89,7 @@ def hash_token(token: str) -> str:
     Returns:
         The SHA-256 hex digest of ``token``.
     """
-    return hashlib.sha256(data=token.encode()).hexdigest()
+    return hashlib.sha256(token.encode()).hexdigest()
 
 def verify_token(token: str, token_hash: str) -> bool:
     """Verify that a raw token matches a stored SHA-256 token hash.
@@ -102,7 +102,7 @@ def verify_token(token: str, token_hash: str) -> bool:
         True if the computed digest of ``token`` equals ``token_hash``,
         otherwise False.
     """
-    return hashlib.sha256(data=token.encode()).hexdigest() == token_hash
+    return hashlib.sha256(token.encode()).hexdigest() == token_hash
 
 async def cleanup_tokens() -> None:
     """Remove expired or revoked refresh tokens from persistent storage.
@@ -161,9 +161,9 @@ def create_refresh_token(user_id: UUID, db: Optional[Session] = None) -> str:
             while creating the token record (propagates after rollback).
     """
     expire = datetime.now(tz=timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    payload = {"sub": str(object=user_id), "exp": expire}
+    payload: dict[str, str] = {"sub": str(user_id), "exp": str(expire)}
     token = jwt.encode(payload=payload, key=***REMOVED***, algorithm=ALGORITHM)
-    
+
     owns_session = False
     if db is None:
         db = SessionLocal()
@@ -278,9 +278,9 @@ def authenticate_user(email: str, password: str) -> dict[str, str]:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
-    
+
     access_token = create_access_token(user_id=user.id)
-    
+
     refresh_token = create_refresh_token(user_id=user.id, db=db)
 
     return {"refresh_token": refresh_token, "access_token": access_token}
@@ -340,7 +340,7 @@ def register_user(email: str, password: str, profile_data: Optional[UserProfile]
 
         return {"refresh_token": refresh_token, "access_token": access_token}
     except IntegrityError:
-        db.rollback()  # if email is already in use 
+        db.rollback()  # if email is already in use
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered"
@@ -409,7 +409,7 @@ def refresh_token(old_refresh_token: str) -> dict[str, str]:
 
     # Issue new tokens
     new_access = create_access_token(user_id=token_entry.user_id)
-    
+
     # create_refresh_token will revoke previous tokens and persist the new one
     new_refresh = create_refresh_token(user_id=token_entry.user_id, db=db)
 
