@@ -36,7 +36,7 @@ DB: dict[str, Optional[str]] = {
 }
 
 # Auth / JWT settings
-SECRET_KEY: Optional[str] = require_env("***REMOVED***")
+SECRET_KEY: Optional[str] = require_env("SECRET_KEY")
 ALGORITHM: Optional[str] = require_env("ALGORITHM")
 
 _access_default: str = require_env("ACCESS_TOKEN_EXPIRE_MINUTES", "15")
