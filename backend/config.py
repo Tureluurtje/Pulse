@@ -19,7 +19,7 @@ if dotenv_path.exists():
     load_dotenv(dotenv_path)
 else:
     # If running in CI / env vars are already set, don't fail
-    if not os.getenv("DB_USERNAME") or not os.getenv("DB_***REMOVED***"):
+    if not os.getenv("DB_USERNAME") or not os.getenv("DB_PASSWORD"):
         raise FileNotFoundError(f".env file not found at {dotenv_path} and DB credentials are missing")
 
 def require_env(name: str, default: Optional[str] = None) -> str:
@@ -31,12 +31,12 @@ def require_env(name: str, default: Optional[str] = None) -> str:
 # Database config
 DB: dict[str, Optional[str]] = {
     "USERNAME": require_env("DB_USERNAME"),
-    "***REMOVED***": require_env("DB_***REMOVED***"),
+    "PASSWORD": require_env("DB_PASSWORD"),
     "DATABASE": require_env("DB_DATABASE"),
 }
 
 # Auth / JWT settings
-***REMOVED***: Optional[str] = require_env("***REMOVED***")
+SECRET_KEY: Optional[str] = require_env("***REMOVED***")
 ALGORITHM: Optional[str] = require_env("ALGORITHM")
 
 _access_default: str = require_env("ACCESS_TOKEN_EXPIRE_MINUTES", "15")

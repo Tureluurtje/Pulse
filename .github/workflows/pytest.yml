@@ -13,11 +13,11 @@ jobs:
     # Set job-level environment variables from GitHub secrets
     env:
       DB_USERNAME: ${{ secrets.DB_USERNAME }}
-      DB_***REMOVED***: ${{ secrets.DB_***REMOVED*** }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_DATABASE: ${{ secrets.DB_DATABASE }}
-      DATABASE_URL: postgresql+psycopg2://${{ secrets.DB_USERNAME }}:${{ secrets.DB_***REMOVED*** }}@localhost:5432/${{ secrets.DB_DATABASE }}
+      DATABASE_URL: postgresql+psycopg2://${{ secrets.DB_USERNAME }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_DATABASE }}
       PYTHONPATH: .
-      ***REMOVED***: ${{ secrets.***REMOVED*** }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
       REFRESH_TOKEN_EXPIRE_DAYS: ${{ secrets.REFRESH_TOKEN_EXPIRE_DAYS }}
@@ -29,7 +29,7 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_USER: ${{ secrets.DB_USERNAME }}
-          POSTGRES_***REMOVED***: ${{ secrets.DB_***REMOVED*** }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.DB_DATABASE }}
         options: >-
           --health-cmd="pg_isready -U tureluurtje"
