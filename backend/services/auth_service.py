@@ -362,7 +362,7 @@ def validate_access_token(token: str) -> Claims:
             (HTTP 401).
     """
     try:
-        payload = jwt.decode(jwt=token, key=SECRET_KEY***, algorithms=[ALGORITHM])
+        payload = jwt.decode(jwt=token, key=SECRET_KEY, algorithms=[ALGORITHM])
         return Claims(**payload)
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         raise HTTPException(
