@@ -30,11 +30,6 @@ from .routes import (
 from .sockets import auth_socket_router, chat_socket_router
 from .services.auth_service import cleanup_tokens
 
-***REMOVED*** = "supersecret"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
-REFRESH_TOKEN_EXPIRE_DAYS = 30
-
 # Define main app function config
 app = FastAPI()
 

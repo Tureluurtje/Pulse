@@ -13,7 +13,7 @@ from ..models.auth import User, Tokens
 from ..models.users import UserProfile
 from ..schema.http.auth import Claims
 
-from ..config import ***REMOVED***, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
+from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 
 # Initialize argon2 PasswordHasher instance
 _ph = PasswordHasher()
@@ -137,7 +137,7 @@ def create_access_token(user_id: UUID) -> str:
         "exp": expire
     }
 
-    token: str = jwt.encode(payload=payload, key=***REMOVED***, algorithm=ALGORITHM)
+    token: str = jwt.encode(payload=payload, key=SECRET_KEY, algorithm=ALGORITHM)
     return token
 
 def create_refresh_token(user_id: UUID, db: Optional[Session] = None) -> str:
@@ -162,7 +162,7 @@ def create_refresh_token(user_id: UUID, db: Optional[Session] = None) -> str:
     """
     expire = datetime.now(tz=timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     payload: dict[str, str] = {"sub": str(user_id), "exp": str(expire)}
-    token = jwt.encode(payload=payload, key=***REMOVED***, algorithm=ALGORITHM)
+    token = jwt.encode(payload=payload, key=SECRET_KEY, algorithm=ALGORITHM)
 
     owns_session = False
     if db is None:
@@ -362,7 +362,7 @@ def validate_access_token(token: str) -> Claims:
             (HTTP 401).
     """
     try:
-        payload = jwt.decode(jwt=token, key=***REMOVED***, algorithms=[ALGORITHM])
+        payload = jwt.decode(jwt=token, key=SECRET_KEY***, algorithms=[ALGORITHM])
         return Claims(**payload)
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         raise HTTPException(
