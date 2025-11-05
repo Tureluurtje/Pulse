@@ -52,7 +52,7 @@ def test_get_all_conversations_for_user() -> None:
         conv = svc.create_conversation_service(name="c", conversation_type="group", created_by=user.id, participant_ids=[user.id, other.id])
 
         all_for_user = svc.get_all_conversations_service(user_id=user.id)
-        assert any(str(conv.id) == c["id"] for c in all_for_user)
+        assert any(conv.id == c["id"] for c in all_for_user)
     finally:
         if conv is not None:
             db.query(Participant).filter(Participant.conversation_id == conv.id).delete(synchronize_session=False)
@@ -73,7 +73,7 @@ def test_get_single_conversation_service_returns_expected_fields() -> None:
         conv = svc.create_conversation_service(name="single", conversation_type="group", created_by=user.id, participant_ids=[user.id, other.id])
 
         single = svc.get_single_conversation_service(user_id=user.id, conversation_id=conv.id)
-        assert single[0]["id"] == str(object=conv.id)
+        assert single[0]["id"] == conv.id
         assert "name" in single[0] and "participant_count" in single[0]
     finally:
         if conv is not None:

@@ -44,3 +44,26 @@ def get_user_profile(user_id: UUID) -> UserProfileObj:
         }
     finally:
         db.close()
+
+def get_all_users() -> list[UserProfileObj]:
+    db = SessionLocal()
+    user_list: list[UserProfileObj] = []
+    profiles: list[UserProfile] = db.query(UserProfile).all()
+    for profile in profiles:
+        user_list.append(
+            UserProfileObj(
+                id=profile.id,
+                user_id=profile.user_id,
+                first_name=profile.first_name,
+                last_name=profile.last_name,
+                phone=profile.phone,
+                avatar_url=profile.avatar_url,
+                bio=profile.bio,
+                date_of_birth=profile.date_of_birth,
+                location=profile.location,
+                website=profile.website,
+                created_at=profile.created_at,
+                updated_at=profile.updated_at
+            )
+        )
+    return user_list

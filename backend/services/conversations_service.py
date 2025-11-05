@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from .participants_service import get_user_role
 from ..schema.internal import conversationObject
-from typing import Optional
+from typing import Optional, Literal
 
 def get_all_conversations_service(
     user_id: UUID,
@@ -31,7 +31,24 @@ def get_all_conversations_service(
     db = SessionLocal()
 
     # Join conversations with participants to filter only those the user is in
-    conversations = (
+    if limit == 0:
+        conversations = (
+            db.query(
+                Conversation.id,
+                Conversation.name,
+                Conversation.created_at,
+                Conversation.created_by,  # Assuming Conversation has created_by
+                func.count(Participant.user_id).label(name="participant_count"),
+            )
+            .join(target=Participant, onclause=Participant.conversation_id == Conversation.id)
+            .filter(Participant.user_id == user_id)
+            .group_by(Conversation.id)
+            .order_by(Conversation.created_at.desc())
+            .offset(offset=offset)
+            .all()
+        )
+    else:
+        conversations = (
         db.query(
             Conversation.id,
             Conversation.name,
@@ -47,15 +64,16 @@ def get_all_conversations_service(
         .limit(limit=limit)
         .all()
     )
+    db.close()
 
     # Transform into desired response format
     return [
         conversationObject(
-            id= str(object=conversation.id),
-            name= str(object=conversation.name) or "Untitled Conversation",
-            created_by= str(object=conversation.created_by),
-            created_at= str(object=conversation.created_at.isoformat()),
-            participant_count= int(conversation.participant_count),
+            id= conversation.id,
+            name= conversation.name or "Untitled Conversation",
+            created_by= conversation.created_by,
+            created_at= conversation.created_at.isoformat(),
+            participant_count= conversation.participant_count,
         )
         for conversation in conversations
     ]
@@ -105,6 +123,7 @@ def get_single_conversation_service(
         .limit(limit=limit)
         .first()
     )
+    db.close()
 
     if not conversation:
         raise HTTPException(
@@ -115,17 +134,17 @@ def get_single_conversation_service(
     # Transform into desired response format
     return [
         conversationObject(
-            id= str(object=conversation.id),
-            name= str(object=conversation.name) or "Untitled Conversation",
-            created_by= str(object=conversation.created_by),
-            created_at= str(object=conversation.created_at.isoformat()),
-            participant_count= int(conversation.participant_count),
+            id= conversation.id,
+            name= conversation.name or "Untitled Conversation",
+            created_by= conversation.created_by,
+            created_at= conversation.created_at.isoformat(),
+            participant_count= conversation.participant_count,
         )
     ]
 
 def create_conversation_service(
     name: str,
-    conversation_type: str,
+    conversation_type: Literal["private", "group"],
     created_by: UUID,
     participant_ids: list[UUID]
 ) -> Conversation:
@@ -167,7 +186,8 @@ def create_conversation_service(
     db.add_all(instances=participants)
     db.commit()
     db.refresh(instance=new_conversation)
-
+    db.close()    
+    
     new_conversation.participant_count = len(participant_ids)
 
     return new_conversation

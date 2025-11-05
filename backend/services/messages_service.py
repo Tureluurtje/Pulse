@@ -127,6 +127,7 @@ def send_message_service(
     db.add(instance=new_message)
     db.commit()
     db.refresh(instance=new_message)
+    db.close()
 
     return new_message
 
@@ -160,6 +161,7 @@ def edit_message_service(
 
     db.commit()
     db.refresh(message)
+    db.close()
 
     return message
 
