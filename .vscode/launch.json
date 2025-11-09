@@ -11,7 +11,7 @@
                 "--reload"
             ],
             "jinja": true,
-            "cwd": "${workspaceFolder}/backend/"
+            "cwd": "${workspaceFolder}/api/"
         },
         {
             "name": "Python: Debug Tests (pytest)",
@@ -20,7 +20,7 @@
             "purpose": ["debug-test"],
             "justMyCode": false,
             "env": {
-                "PYTHONPATH": "${workspaceFolder}/backend"
+                "PYTHONPATH": "${workspaceFolder}/api"
             },
             "console": "integratedTerminal"
         }
