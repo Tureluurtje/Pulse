@@ -32,8 +32,11 @@ def require_env(name: str, default: Optional[str] = None) -> str:
 DB: dict[str, Optional[str]] = {
     "USERNAME": require_env("DB_USERNAME"),
     "PASSWORD": require_env("DB_PASSWORD"),
+    "HOST": require_env("DB_HOST"),
+    "PORT": require_env("DB_PORT"),
     "DATABASE": require_env("DB_DATABASE"),
 }
+DATABASE_URL = f"postgresql://{DB['USERNAME']}:{DB['PASSWORD']}@{DB['HOST']}:{DB['PORT']}/{DB['DATABASE']}"
 
 # Auth / JWT settings
 SECRET_KEY: str = require_env("SECRET_KEY")
