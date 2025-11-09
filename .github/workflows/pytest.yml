@@ -59,8 +59,8 @@ jobs:
 
             - name: Initialize database schema
               run: |
-                  python backend/tables.py
+                  python api/tables.py
 
             - name: Run pytest
               run: |
-                  pytest -q backend/tests
+                  pytest -q api/tests
