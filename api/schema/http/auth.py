@@ -17,9 +17,6 @@ class RegisterResponse(BaseModel):
     refresh_token: str
     access_token: str
 
-class ValidateRequest(BaseModel):
-    access_token: str
-
 class Claims(BaseModel):
     sub: UUID
     exp: int

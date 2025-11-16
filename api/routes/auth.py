@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from uuid import UUID
 import asyncio
 
-from ..schema.http.auth import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ValidateRequest, ValidateResponse, RefreshRequest, RefreshResponse
+from ..schema.http.auth import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ValidateResponse, RefreshRequest, RefreshResponse
 from ..services.auth_service import authenticate_user, register_user, validate_access_token, refresh_token, get_http_user_id, revoke_refresh_token, cleanup_tokens, get_access_token_http
 
 router = APIRouter(
@@ -28,7 +28,7 @@ async def register(data: RegisterRequest) -> RegisterResponse:
         access_token=tokens["access_token"]
     )
 
-@router.post(path="/validate")
+@router.get(path="/validate")
 async def validate(access_token: str = Depends(get_access_token_http)) -> ValidateResponse:
     payload = validate_access_token(access_token)
     if not payload:
