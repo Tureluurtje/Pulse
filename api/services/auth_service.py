@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status, Request, WebSocket
+from fastapi import HTTPException, status, Request, WebSocket, Cookie
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.session import Session
@@ -50,19 +50,17 @@ def get_access_token(request: Optional[Request] = None, websocket: Optional[WebS
         return auth_header[7:]
     return None
 
-def get_access_token_http(request: Request=None) -> Optional[str]:
-    """Extract the user access token from an HTTP request.
+def get_access_token_http(
+    request: Request,
+    access_token: str | None = Cookie(default=None)
+) -> str | None:
+    # First, try Authorization header
+    token = get_access_token(request=request)
+    if token:
+        return token
 
-    This wrapper calls :pyfunc:`get_user_from_access_token` with an HTTP
-    Request object.
-
-    Args:
-        request: FastAPI Request containing an Authorization header.
-
-    Returns:
-        The access token extracted from the request.
-    """
-    return get_access_token(request=request)
+    # If no Authorization header, fallback to cookie
+    return access_token
 
 def get_access_token_websocket(websocket: WebSocket=None) -> Optional[str]:
     """Extract the access token from a WebSocket request.
