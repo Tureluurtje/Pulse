@@ -50,6 +50,35 @@ def get_access_token(request: Optional[Request] = None, websocket: Optional[WebS
         return auth_header[7:]
     return None
 
+def get_access_token_http(request: Request=None) -> Optional[str]:
+    """Extract the user access token from an HTTP request.
+
+    This wrapper calls :pyfunc:`get_user_from_access_token` with an HTTP
+    Request object.
+
+    Args:
+        request: FastAPI Request containing an Authorization header.
+
+    Returns:
+        The access token extracted from the request.
+    """
+    return get_access_token(request=request)
+
+def get_access_token_websocket(websocket: WebSocket=None) -> Optional[str]:
+    """Extract the access token from a WebSocket request.
+
+    This async wrapper calls :pyfunc:`get_user_from_access_token` with a
+    WebSocket object and returns the extracted access token.
+
+    Args:
+        websocket: FastAPI WebSocket containing Authorization header or
+            a "token" query parameter.
+
+    Returns:
+        The access token extracted from the WebSocket's request.
+    """
+    return get_access_token(websocket=websocket)
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plaintext password against an Argon2 hashed password.
 

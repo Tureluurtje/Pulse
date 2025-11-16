@@ -4,6 +4,7 @@ from ..database import SessionLocal
 from ..schema.internal.user_service import UserProfileObj
 
 from fastapi import HTTPException, status
+from sqlalchemy.orm import joinedload
 from typing import Optional
 from uuid import UUID
 
@@ -22,9 +23,14 @@ def get_user_profile(user_id: UUID) -> UserProfileObj:
     """
     db = SessionLocal()
     try:
-        profile: Optional[UserProfile] = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
-        email: Optional[str] = db.query(User.email).filter(User.id == user_id).scalar()
-        if not profile or not email:
+        profile: Optional[UserProfile] = (
+            db.query(UserProfile)
+                .options(joinedload(UserProfile.user))
+                .filter(UserProfile.user_id == user_id)
+                .first()
+        )
+
+        if not profile or not profile.user.email:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"user profile with id {user_id} not found"
@@ -35,7 +41,7 @@ def get_user_profile(user_id: UUID) -> UserProfileObj:
             "user_id": profile.user_id,
             "first_name": profile.first_name,
             "last_name": profile.last_name,
-            "email": email,
+            "email": profile.user.email,
             "phone": profile.phone,
             "avatar_url": profile.avatar_url,
             "bio": profile.bio,
@@ -51,7 +57,11 @@ def get_user_profile(user_id: UUID) -> UserProfileObj:
 def get_all_users() -> list[UserProfileObj]:
     db = SessionLocal()
     user_list: list[UserProfileObj] = []
-    profiles: list[UserProfile] = db.query(UserProfile).all()
+    profiles: list[UserProfile] = (
+        db.query(UserProfile)
+        .options(joinedload(UserProfile.user))
+        .all()
+    )
     for profile in profiles:
         user_list.append(
             UserProfileObj(
@@ -59,6 +69,7 @@ def get_all_users() -> list[UserProfileObj]:
                 user_id=profile.user_id,
                 first_name=profile.first_name,
                 last_name=profile.last_name,
+                email=profile.user.email,
                 phone=profile.phone,
                 avatar_url=profile.avatar_url,
                 bio=profile.bio,

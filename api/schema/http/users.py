@@ -12,6 +12,7 @@ class UserProfileResponse(BaseModel):
     user_id: UUID = uuid4()
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    email: str
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
     bio: Optional[str] = None
