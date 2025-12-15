@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, HTTPException
 from typing import List
 from uuid import UUID
 
@@ -8,6 +8,10 @@ from api.schema.internal.conversations import conversationObject
 from ..services.auth_service import get_http_user_id
 from ..services.conversations_service import get_all_conversations_service, get_single_conversation_service, create_conversation_service, edit_conversation_service, delete_conversation_service
 from ..schema.http.conversations import GetConversationsRequest, GetConversationsResponse, CreateConversationRequest, CreateConversationResponse, EditConversationRequest, EditConversationResponse, DeleteConversationRequest
+
+from ..schema.http.messages import GetMessagesRequest, GetMessagesResponse
+from ..services.messages_service import get_all_messages_service, get_single_message_service
+from ..models.messages import Message
 
 router = APIRouter(
     prefix="/conversations",
@@ -71,3 +75,25 @@ def delete_message(
         user_id=user_id
         )
     return
+
+@router.get("/{conversation_id}/messages", response_model=List[GetMessagesResponse])
+def get_messages(
+    data: GetMessagesRequest = Depends(),
+    user_id: UUID = Depends(dependency=get_http_user_id)
+) -> List[Message]:
+    if data.message_id:
+        return [get_single_message_service(
+            message_id=data.message_id,
+            user_id=user_id
+        )]
+    if data.conversation_id:
+        return get_all_messages_service(
+            conversation_id=data.conversation_id,
+            user_id=user_id,
+            limit=data.limit,
+            offset=data.offset,
+            before=data.before
+        )
+    raise HTTPException(
+        status_code=400,
+        detail="Must provide conversation_id or message_id")

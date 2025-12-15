@@ -54,6 +54,34 @@ def get_user_profile(user_id: UUID) -> UserProfileObj:
     finally:
         db.close()
 
+def ensure_user_profiles() -> None:
+    """Create missing UserProfile records for any User without a profile.
+    
+    This is a maintenance function to handle users that may have been created
+    before profile creation was mandatory, or without a profile for any reason.
+    """
+    db = SessionLocal()
+    try:
+        # Find users without profiles
+        users_without_profiles = (
+            db.query(User)
+            .outerjoin(UserProfile, User.id == UserProfile.user_id)
+            .filter(UserProfile.id.is_(None))
+            .all()
+        )
+        
+        if not users_without_profiles:
+            return
+        
+        # Create profiles for these users
+        for user in users_without_profiles:
+            profile = UserProfile(user_id=user.id)
+            db.add(profile)
+        
+        db.commit()
+    finally:
+        db.close()
+
 def get_all_users() -> list[UserProfileObj]:
     db = SessionLocal()
     user_list: list[UserProfileObj] = []

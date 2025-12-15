@@ -7,6 +7,12 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import * as messagesService from "./services/messages";
 import * as authService from "./services/auth";
+import { getConversations } from "./services/conversations.ts";
+
+// Expose for DevTools debugging
+(window as any).getConversations = getConversations;
+(window as any).messagesService = messagesService;
+(window as any).authService = authService;
 
 function ProtectedAppWrapper() {
     const navigate = useNavigate();
@@ -37,7 +43,9 @@ function ProtectedAppWrapper() {
         },
         onLoadMessages: async (chatId: string) => {
             try {
-                const msgs = await messagesService.getMessages(chatId);
+                const res = await messagesService.getMessages(chatId);
+                const msgs = await res.json();
+                if (!Array.isArray(msgs)) return [];
                 return msgs.map((m: any) => ({
                     id: m.id,
                     text: m.content,
@@ -73,7 +81,7 @@ function ProtectedAppWrapper() {
         },
     };
 
-    return <App callbacks={callbacks} />;
+    return <App callbacks={callbacks as any} />;
 }
 
 const root = createRoot(document.getElementById("root")!);

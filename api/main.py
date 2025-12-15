@@ -33,18 +33,18 @@ from .services.auth_service import cleanup_tokens
 # Define main app function config
 app = FastAPI()
 
-# Set CORS
+# Set CORS - MUST be added before routes are included
 origins = [
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
     middleware_class=CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],     # Allow GET, POST, etc.
-    allow_headers=["*"],     # Allow custom headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Define routers
@@ -67,6 +67,13 @@ async def cleanup_middleware(
     # Fire-and-forget token cleanup; don't await so requests aren't delayed.
     asyncio.create_task(cleanup_tokens())
     response: Response = await call_next(request)
+
+    # Ensure CORS headers are always present
+    origin = request.headers.get("origin")
+    if origin in origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+
     return response
 
 @app.get(path="/")

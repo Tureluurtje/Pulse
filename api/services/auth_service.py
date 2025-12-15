@@ -9,6 +9,7 @@ from typing import Optional
 
 from ..database import SessionLocal
 from argon2 import PasswordHasher
+from argon2.exceptions import VerificationError, InvalidHashError, VerifyMismatchError
 from ..models.auth import User, Tokens
 from ..models.users import UserProfile
 from ..schema.http.auth import Claims
@@ -93,8 +94,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         argon2.exceptions.VerificationError: If there is a problem verifying the
             hash (for example a corrupted hash).
     """
-    result = _ph.verify(hash=hashed_password, password=plain_password)
-    return result
+    try:
+        result = _ph.verify(hash=hashed_password, password=plain_password)
+        return True
+    except (VerifyMismatchError, InvalidHashError, VerificationError):
+        return False
+
 
 def hash_password(password: str) -> str:
     """Create an Argon2 hash for a plaintext password.
@@ -140,10 +145,13 @@ async def cleanup_tokens() -> None:
     task and does not return a value.
     """
     db = SessionLocal()
-    db.query(Tokens).filter(
-        (Tokens.expires_at < datetime.now(tz=timezone.utc)) | (Tokens.revoked_at.isnot(other=None))
-    ).delete(synchronize_session=False)
-    db.commit()
+    try:
+        db.query(Tokens).filter(
+            (Tokens.expires_at < datetime.now(tz=timezone.utc)) | (Tokens.revoked_at.isnot(other=None))
+        ).delete(synchronize_session=False)
+        db.commit()
+    finally:
+        db.close()
 
 def create_access_token(user_id: UUID) -> str:
     """Create a signed JWT access token for a user identifier.

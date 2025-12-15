@@ -17,6 +17,7 @@ export default defineConfig({
         outDir: "build",
     },
     server: {
+        hmr: false,
         port: 3000,
         open: true,
         proxy: {

@@ -10,7 +10,7 @@ class GetConversationsRequest(BaseModel):
 
 class GetConversationsResponse(BaseModel):
     id: UUID
-    title: str
+    name: str
     created_by: UUID
     created_at: datetime
     participant_count: int

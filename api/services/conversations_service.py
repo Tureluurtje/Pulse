@@ -1,6 +1,7 @@
 from sqlalchemy import func, and_
 from sqlalchemy.orm.session import Session
 from ..database import SessionLocal
+from ..models.auth import User
 from ..models.conversations import Conversation, Participant
 from ..models.messages import Message
 from uuid import UUID
@@ -31,39 +32,26 @@ def get_all_conversations_service(
     db = SessionLocal()
 
     # Join conversations with participants to filter only those the user is in
-    if limit == 0:
-        conversations = (
-            db.query(
-                Conversation.id,
-                Conversation.name,
-                Conversation.created_at,
-                Conversation.created_by,  # Assuming Conversation has created_by
-                func.count(Participant.user_id).label(name="participant_count"),
-            )
-            .join(target=Participant, onclause=Participant.conversation_id == Conversation.id)
-            .filter(Participant.user_id == user_id)
-            .group_by(Conversation.id)
-            .order_by(Conversation.created_at.desc())
-            .offset(offset=offset)
-            .all()
-        )
-    else:
-        conversations = (
+    query = (
         db.query(
             Conversation.id,
             Conversation.name,
             Conversation.created_at,
-            Conversation.created_by,  # Assuming Conversation has created_by
-            func.count(Participant.user_id).label(name="participant_count"),
+            Conversation.created_by,
+            func.count(Participant.user_id).label("participant_count"),
         )
-        .join(target=Participant, onclause=Participant.conversation_id == Conversation.id)
+        .join(Participant, Participant.conversation_id == Conversation.id)
         .filter(Participant.user_id == user_id)
         .group_by(Conversation.id)
         .order_by(Conversation.created_at.desc())
-        .offset(offset=offset)
-        .limit(limit=limit)
-        .all()
+        .offset(offset)
     )
+
+    # Only apply limit if it's not 0
+    if limit and limit > 0:
+        query = query.limit(limit)
+
+    conversations = query.all()
     db.close()
 
     # Transform into desired response format
@@ -130,7 +118,7 @@ def get_single_conversation_service(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="conversation not found"
         )
-    
+
     # Transform into desired response format
     return [
         conversationObject(
@@ -154,13 +142,27 @@ def create_conversation_service(
         name: Display name for the new conversation.
         conversation_type: Application-specific conversation type string.
         created_by: UUID of the user creating the conversation.
-        participant_ids: List of UUIDs to add as participants.
+        participant_ids: List of UUIDs to add as participants, without the creator's UUID.
 
     Returns:
         The newly created ``Conversation`` ORM instance, with a
         ``participant_count`` attribute set.
     """
     db = SessionLocal()
+
+    # Validate all participant IDs (including creator) exist to avoid FK errors
+    candidate_ids = set(participant_ids)
+    candidate_ids.add(created_by)
+    existing_ids = {
+        row.id for row in db.query(User.id).filter(User.id.in_(candidate_ids)).all()
+    }
+    missing_ids = candidate_ids.difference(existing_ids)
+    if missing_ids:
+        db.close()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown user ids: {', '.join(str(x) for x in missing_ids)}",
+        )
 
     new_conversation = Conversation(
         name=name,
@@ -172,6 +174,8 @@ def create_conversation_service(
     db.commit()
     db.refresh(instance=new_conversation)
 
+    if created_by not in participant_ids:
+        participant_ids.append(created_by)  # Ensure creator is a participant
     participants: list[Participant] = []
     for participant in participant_ids:
         role = "admin" if participant == created_by else "member"
@@ -186,8 +190,8 @@ def create_conversation_service(
     db.add_all(instances=participants)
     db.commit()
     db.refresh(instance=new_conversation)
-    db.close()    
-    
+    db.close()
+
     new_conversation.participant_count = len(participant_ids)
 
     return new_conversation
@@ -239,7 +243,7 @@ def edit_conversation_service(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="conversation not found"
         )
-    
+
     conversation.name = new_name
 
     db.commit()
@@ -315,11 +319,11 @@ def get_conversation_by_message(
     conversation_id = db.query(Message.conversation_id).filter(
         Message.id == message_id
     ).scalar()
-    
+
     if not conversation_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Message with id {message_id} not found or has no associated conversation"
         )
-    
+
     return conversation_id

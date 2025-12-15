@@ -1,11 +1,14 @@
 import { apiFetch } from "./api";
 
-export async function getMessages(conversationId: string) {
-    // backend expects conversation_id as query param
-    const res = await apiFetch(
-        `/messages?conversation_id=${encodeURIComponent(conversationId)}`
-    );
-    return res;
+export async function getMessages(conversationID: string) {
+    const res = await apiFetch(`/conversations/${conversationID}/messages`, {
+        method: "GET",
+    });
+    if (!res.ok) {
+        throw new Error(`getMessages failed: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data;
 }
 
 export async function sendMessage(conversationId: string, content: string) {

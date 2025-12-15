@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List
 from uuid import UUID
 
-from api.models.messages import Message
+from ..models.messages import Message
 
 from ..services.auth_service import get_http_user_id
 from ..services.messages_service import get_all_messages_service, send_message_service, get_single_message_service, edit_message_service, delete_message_service

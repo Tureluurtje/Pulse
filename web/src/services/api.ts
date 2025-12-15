@@ -1,6 +1,7 @@
 const API_BASE = import.meta.env.PROD
     ? "https://api.pulse.kwako.nl"
-    : "http://localhost:3001";
+    : "http://localhost:8000";
+
 export async function apiFetch(path: string, opts: RequestInit = {}) {
     // Start with any headers passed in opts
     const headers = new Headers(opts.headers || {});
@@ -30,7 +31,6 @@ export async function apiFetch(path: string, opts: RequestInit = {}) {
 
     const normalized = path.startsWith("/") ? path : `/${path}`;
     const url = `${API_BASE}${normalized}`;
-
     const res = await fetch(url, fetchOptions);
     return res;
 }
