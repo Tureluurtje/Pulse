@@ -1,25 +1,26 @@
 from sqlalchemy import func, and_
 from sqlalchemy.orm.session import Session
+from typing import Optional, Literal
+from uuid import UUID
+from fastapi import HTTPException, status
+
+from ..services.messages_service import get_last_message_in_conversation_service
 from ..database import SessionLocal
 from ..models.auth import User
 from ..models.conversations import Conversation, Participant
-from ..models.messages import Message
-from uuid import UUID
-from fastapi import HTTPException, status
 from .participants_service import get_user_role
-from ..schema.internal import conversationObject
-from typing import Optional, Literal
+from ..schema.internal import ConversationPreview, ConversationDetail
 
 def get_all_conversations_service(
     user_id: UUID,
     limit: Optional[int] = 50,
     offset: Optional[int] = 0,
-) -> list[conversationObject]:
+) -> list[ConversationPreview]:
     """Return a paginated list of conversations the user participates in.
 
     The function queries conversations joined with participants to filter
     results to those the given ``user_id`` is a member of. Each result is
-    converted into a ``conversationObject`` with basic metadata.
+    converted into a ``conversationPreview`` with basic metadata.
 
     Args:
         user_id: UUID of the requesting user.
@@ -52,26 +53,32 @@ def get_all_conversations_service(
         query = query.limit(limit)
 
     conversations = query.all()
+
+    previews: list[ConversationPreview] = []
+    for conversation in conversations:
+        last_message = get_last_message_in_conversation_service(
+            conversation_id=conversation.id
+        )
+        previews.append(
+            ConversationPreview(
+                id=conversation.id,
+                name=conversation.name or None,
+                last_message_preview=last_message.content if last_message else None,
+                last_message_at=last_message.created_at if last_message else None,
+                unread_count=0,
+                participant_count=conversation.participant_count,
+            )
+        )
+
     db.close()
 
     # Transform into desired response format
-    return [
-        conversationObject(
-            id= conversation.id,
-            name= conversation.name or "Untitled Conversation",
-            created_by= conversation.created_by,
-            created_at= conversation.created_at.isoformat(),
-            participant_count= conversation.participant_count,
-        )
-        for conversation in conversations
-    ]
+    return previews
 
 def get_single_conversation_service(
     user_id: UUID,
-    conversation_id: UUID,
-    limit: int = 50,
-    offset: int = 0,
-) -> list[conversationObject]:
+    conversation_id: UUID
+) -> ConversationDetail:
     """Return details for a single conversation if the user is a member.
 
     The function validates that ``user_id`` is a participant in the
@@ -107,8 +114,6 @@ def get_single_conversation_service(
         .filter(and_(Participant.user_id == user_id, Conversation.id == conversation_id))
         .group_by(Conversation.id)
         .order_by(Conversation.created_at.desc())
-        .offset(offset=offset)
-        .limit(limit=limit)
         .first()
     )
     db.close()
@@ -120,15 +125,13 @@ def get_single_conversation_service(
         )
 
     # Transform into desired response format
-    return [
-        conversationObject(
-            id= conversation.id,
-            name= conversation.name or "Untitled Conversation",
-            created_by= conversation.created_by,
-            created_at= conversation.created_at.isoformat(),
-            participant_count= conversation.participant_count,
-        )
-    ]
+    return ConversationDetail(
+        id= conversation.id,
+        name= conversation.name or None,
+        created_by= conversation.created_by,
+        created_at= conversation.created_at,
+        participant_count= conversation.participant_count,
+    )
 
 def create_conversation_service(
     name: str,
@@ -178,7 +181,7 @@ def create_conversation_service(
         participant_ids.append(created_by)  # Ensure creator is a participant
     participants: list[Participant] = []
     for participant in participant_ids:
-        role = "admin" if participant == created_by else "member"
+        role = "owner" if participant == created_by else "member"
         participants.append(
             Participant(
                 conversation_id=new_conversation.id,
@@ -249,7 +252,13 @@ def edit_conversation_service(
     db.commit()
     db.refresh(conversation)
 
-    return conversation
+    return ConversationDetail(
+        id= conversation.id,
+        name= conversation.name or None,
+        created_by= conversation.created_by,
+        created_at= conversation.created_at,
+        participant_count= db.query(Participant).filter(Participant.conversation_id == conversation_id).count()
+    )
 
 def delete_conversation_service(
     conversation_id: UUID,
@@ -299,31 +308,40 @@ def delete_conversation_service(
     db.commit()
     return
 
-def get_conversation_by_message(
-    message_id: UUID,
-    db: Session
-) -> UUID:
-    """Resolve the conversation UUID for a given message.
+def leave_conversation_service(
+    conversation_id: UUID,
+    user_id: UUID
+) -> None:
+    """Remove a user from a conversation's participants.
 
     Args:
-        message_id: UUID of the message whose conversation is required.
-        db: SQLAlchemy session used to query the message.
-
-    Returns:
-        The UUID of the conversation the message belongs to.
+        conversation_id: UUID of the conversation to leave.
+        user_id: UUID of the requesting user.
 
     Raises:
-        fastapi.HTTPException: If the message or its conversation cannot be
-            found (HTTP 404).
+        fastapi.HTTPException: If the user is not a participant
+            (HTTP 403).
     """
-    conversation_id = db.query(Message.conversation_id).filter(
-        Message.id == message_id
-    ).scalar()
+    db = SessionLocal()
 
-    if not conversation_id:
+    user_role = get_user_role(
+        conversation_id=conversation_id,
+        user_id=user_id,
+        db=db
+    )
+
+    if not user_role:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Message with id {message_id} not found or has no associated conversation"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not part of this conversation."
         )
 
-    return conversation_id
+    db.query(Participant).filter(
+        and_(
+            Participant.conversation_id == conversation_id,
+            Participant.user_id == user_id
+        )
+    ).delete(synchronize_session=False)
+
+    db.commit()
+    return

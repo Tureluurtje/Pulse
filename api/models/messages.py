@@ -17,6 +17,7 @@ class Message(Base):
     conversation_id: Mapped[uuid.UUID] = mapped_column(__name_pos=UUID(as_uuid=True), __type_pos=ForeignKey(column="conversations.id", ondelete="CASCADE"), nullable=False)
     sender_id: Mapped[uuid.UUID] = mapped_column(__name_pos=UUID(as_uuid=True), __type_pos=ForeignKey(column="users.id", ondelete="CASCADE"), nullable=False)
     content: Mapped[str] = mapped_column(__name_pos=Text, nullable=False)
+    edited_at: Mapped[datetime | None] = mapped_column(__name_pos=DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(__name_pos=DateTime(timezone=True), default=func.now(), nullable=False)
 
     # relationships

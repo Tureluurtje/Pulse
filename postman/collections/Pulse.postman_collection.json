@@ -1,0 +1,933 @@
+{
+  "info": {
+    "_postman_id": "67675f8a-6076-4e3a-b1a2-dc3bcd498820",
+    "name": "Pulse",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2e3bdf60-b8e6-4303-98ea-f7a427e6fb0d",
+                "exec": [
+                  "// Visualization Script",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "// Visualization Script",
+                  "const template = `",
+                  "  <h3>Token Lengths</h3>",
+                  "  <table>",
+                  "    <tr><th>Token</th><th>Length</th></tr>",
+                  "    <tr><td>Access Token</td><td>{{accessTokenLength}}</td></tr>",
+                  "    <tr><td>Refresh Token</td><td>{{refreshTokenLength}}</td></tr>",
+                  "  </table>",
+                  "  <div style=\"max-width:400px;\">",
+                  "    <canvas id=\"barChart\" height=\"100\"></canvas>",
+                  "  </div>",
+                  "  <script src=\"https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js\"></script>",
+                  "  <script>",
+                  "    pm.getData(function (err, value) {",
+                  "      var ctx = document.getElementById('barChart').getContext('2d');",
+                  "      new Chart(ctx, {",
+                  "        type: 'bar',",
+                  "        data: {",
+                  "          labels: ['Access Token', 'Refresh Token'],",
+                  "          datasets: [{",
+                  "            label: 'Token Length',",
+                  "            data: [value.accessTokenLength, value.refreshTokenLength],",
+                  "            backgroundColor: ['#36a2eb', '#ff6384']",
+                  "          }]",
+                  "        },",
+                  "        options: {",
+                  "          legend: { display: false },",
+                  "          title: { display: false },",
+                  "          scales: {",
+                  "            yAxes: [{",
+                  "              ticks: { beginAtZero: true }",
+                  "            }]",
+                  "          }",
+                  "        }",
+                  "      });",
+                  "    });",
+                  "  <\\/script>",
+                  "`;",
+                  "",
+                  "function createPayload() {",
+                  "  var json = pm.response.json();",
+                  "  return {",
+                  "    accessTokenLength: json.access_token ? json.access_token.length : 0,",
+                  "    refreshTokenLength: json.refresh_token ? json.refresh_token.length : 0",
+                  "  };",
+                  "}",
+                  "",
+                  "pm.visualizer.set(template, createPayload());"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "30e3c4ef-c8b9-4b2c-b648-24d5ab5f4bc9",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "a8ccfe50-4f8c-4aab-a718-0c8582dcd16b",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"testuser_-268d3d13253d4e9e862296ac185373ca@example.com\",\n    \"password\": \"PASSWORD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/login",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "register",
+          "id": "5d35653e-b0bb-473c-8461-44d112052ec9",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@test.com\",\n    \"password\": \"PASSWORD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/register",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "refresh",
+          "id": "388a0c9b-7857-4bf0-aaf0-9097b88f46a1",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh_token\": \"b60d2b9f6e509363711e37b9735a46cc03d06c47b1de521cdff782f2b2d6e208\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/refresh",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "logout",
+          "id": "dfd5bca2-fcc6-4af1-80b5-10c79b5d85d8",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3IiwiZXhwIjoxNzU5MjU1ODYxfQ.q2CNhq-p9etHggFwmUNLO0A0FAUv4wlEuwd0dM2n62w",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/logout",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "validate",
+          "id": "935b5265-6a21-4732-a8f3-da26bb80ea58",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/validate",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "validate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "d01fec3e-e8df-4d72-93bb-e0b44c0c0a3f"
+    },
+    {
+      "name": "messages",
+      "item": [
+        {
+          "name": "send",
+          "id": "c39bc511-e8c1-4ff7-9b6e-76f64bbe7c22",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"content\": \"test message 4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc/messages",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "id": "47e1d34c-76e0-4794-889f-4a8b1cc01e54",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc/messages",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "edit",
+          "id": "5bf9e8e6-3b8a-4385-8151-fe8cbc3cad32",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"content\": \"test to edit message 4, test 3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/messages/a46f7a3f-4fc6-4862-8f63-c617d75bb3aa",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "messages",
+                "a46f7a3f-4fc6-4862-8f63-c617d75bb3aa"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "id": "aeedf97b-349e-42e8-b3df-0892e2743242",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/messages/a46f7a3f-4fc6-4862-8f63-c617d75bb3aa",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "messages",
+                "a46f7a3f-4fc6-4862-8f63-c617d75bb3aa"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "7609cb22-b955-473a-a2dd-1f4ebae98aa4"
+    },
+    {
+      "name": "users",
+      "item": [
+        {
+          "name": "me",
+          "id": "41315bae-2a60-4ba3-8df5-d76ba9815cb6",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/me",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "edit",
+          "id": "925c1def-a9d0-4773-8e5f-3b40861fbb71",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"date_of_birth\": \"4-13-2025\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/users/me",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "other",
+          "id": "e1e74b6d-a289-4866-bf5a-356676add836",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/0339a117-d11a-45f4-adc2-fa651baacac0",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "0339a117-d11a-45f4-adc2-fa651baacac0"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "5efaec5d-df67-4f61-8f99-75c2ace772bb"
+    },
+    {
+      "name": "conversations",
+      "item": [
+        {
+          "name": "get",
+          "id": "e7d1565e-6db4-4687-b679-80ee49bb5612",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create",
+          "id": "5c8aa3eb-5b96-45d4-9dd3-2ae7c231599f",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0YTA0MzY5NS0yYTg1LTRhM2EtOTZmMi01MWJiNzgwZmIzYWIiLCJleHAiOjE3ODU1MDg0NDF9.YZBIeTDskP5yeDHVbWZ0YAQxUMlqUlc38hRKndrdKSg",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"TEUNMAARSLECHTER\",\n    \"conversation_type\": \"private\",\n    \"participant_ids\": [\"39f654f8-d45d-443c-bb25-120e8f4654c9\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/conversations",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "edit",
+          "id": "274df5f1-f85d-48c8-833f-fcc8efa6f1a9",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYzYyMzUwNC1lNzEwLTQyNTItYjBjYy0wNTMzY2M4NGFjYmEiLCJleHAiOjE3NjYwMDUwNzR9.BfWPKusOTIlbJJj9lIvqbGfRghO65cGXos1jyl8Rp-w",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"new_name\": \"test conversation rename\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "id": "a6d5bcc9-f737-4929-94c5-346506647575",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYzYyMzUwNC1lNzEwLTQyNTItYjBjYy0wNTMzY2M4NGFjYmEiLCJleHAiOjE3NjYwMDQ2MjJ9.kJZppkkmi9dbWmerCwrog-gjFcp8ZX572ogeyTH43tc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"conversation_id\": \"be387fd3-893f-47d7-95bf-6dfb0700089b\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/conversations/delete",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "delete"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "dd37b491-5ec5-43c6-9874-4241385155c6"
+    },
+    {
+      "name": "participants",
+      "item": [
+        {
+          "name": "get",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "fc054b8e-50a7-4b7b-828d-19ac06b5043a",
+                "exec": [
+                  "// Participants Table Visualization Script",
+                  "const template = `",
+                  "<style>",
+                  "  * { box-sizing: border-box; }",
+                  "  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; padding: 20px; margin: 0; background: #f8f9fa; }",
+                  "  .container { max-width: 900px; margin: 0 auto; }",
+                  "  h2 { color: #2d3748; border-bottom: 3px solid #ff6c37; padding-bottom: 12px; margin-bottom: 20px; }",
+                  "  .summary { background: linear-gradient(135deg, #ff6c37 0%, #ff8c5a 100%); padding: 20px; border-radius: 10px; margin-bottom: 25px; color: white; box-shadow: 0 4px 6px rgba(255, 108, 55, 0.3); }",
+                  "  .summary p { margin: 0; font-size: 18px; }",
+                  "  .summary span { font-weight: bold; font-size: 24px; }",
+                  "  .table-wrapper { overflow-x: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }",
+                  "  table { width: 100%; border-collapse: collapse; background: white; min-width: 500px; }",
+                  "  th { background: #2d3748; color: white; padding: 15px 12px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }",
+                  "  td { padding: 14px 12px; border-bottom: 1px solid #e2e8f0; color: #4a5568; }",
+                  "  tr:nth-child(even) { background-color: #f7fafc; }",
+                  "  tr:nth-child(odd) { background-color: #ffffff; }",
+                  "  tr:hover { background-color: #edf2f7; transition: background-color 0.2s ease; }",
+                  "  .index-col { font-weight: 600; color: #ff6c37; width: 60px; }",
+                  "  .user-id { font-family: 'Monaco', 'Consolas', monospace; font-size: 13px; color: #2d3748; }",
+                  "  .role { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #e2e8f0; color: #4a5568; }",
+                  "  .date { color: #718096; font-size: 13px; }",
+                  "  .no-data { text-align: center; padding: 40px; color: #a0aec0; font-style: italic; }",
+                  "</style>",
+                  "<div class=\"container\">",
+                  "  <h2>Participants Overview</h2>",
+                  "  <div class=\"summary\">",
+                  "    <p>Total Participants: <span>{{totalCount}}</span></p>",
+                  "  </div>",
+                  "  <div class=\"table-wrapper\">",
+                  "    <table>",
+                  "      <thead>",
+                  "        <tr>",
+                  "          <th>#</th>",
+                  "          <th>User ID</th>",
+                  "          <th>Role</th>",
+                  "          <th>Joined At</th>",
+                  "        </tr>",
+                  "      </thead>",
+                  "      <tbody>",
+                  "        {{#if hasParticipants}}",
+                  "          {{#each participants}}",
+                  "          <tr>",
+                  "            <td class=\"index-col\">{{index}}</td>",
+                  "            <td class=\"user-id\">{{user_id}}</td>",
+                  "            <td><span class=\"role\">{{role}}</span></td>",
+                  "            <td class=\"date\">{{joined_at}}</td>",
+                  "          </tr>",
+                  "          {{/each}}",
+                  "        {{else}}",
+                  "          <tr>",
+                  "            <td colspan=\"4\" class=\"no-data\">No participants found</td>",
+                  "          </tr>",
+                  "        {{/if}}",
+                  "      </tbody>",
+                  "    </table>",
+                  "  </div>",
+                  "</div>",
+                  "`;",
+                  "",
+                  "function constructVisualizerPayload() {",
+                  "    const response = pm.response.json();",
+                  "    const participants = Array.isArray(response) ? response : (response.participants || response.data || []);",
+                  "    ",
+                  "    const formattedParticipants = participants.map((participant, idx) => {",
+                  "        let formattedDate = participant.joined_at || 'N/A';",
+                  "        if (participant.joined_at) {",
+                  "            try {",
+                  "                const date = new Date(participant.joined_at);",
+                  "                formattedDate = date.toLocaleString();",
+                  "            } catch (e) {",
+                  "                formattedDate = participant.joined_at;",
+                  "            }",
+                  "        }",
+                  "        ",
+                  "        return {",
+                  "            index: idx + 1,",
+                  "            user_id: participant.user_id || participant.userId || 'N/A',",
+                  "            role: participant.role || 'N/A',",
+                  "            joined_at: formattedDate",
+                  "        };",
+                  "    });",
+                  "    ",
+                  "    return {",
+                  "        totalCount: formattedParticipants.length,",
+                  "        participants: formattedParticipants,",
+                  "        hasParticipants: formattedParticipants.length > 0",
+                  "    };",
+                  "}",
+                  "",
+                  "pm.visualizer.set(template, constructVisualizerPayload());"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "089d97aa-0b50-4d5a-8257-d73d45058030",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "2bf2c050-f7cf-4884-8f75-4f3d7cf42682",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc/participants",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+                "participants"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get single",
+          "id": "a61b28a9-6fb9-4542-b5dd-42c206471241",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc/participants/0339a117-d11a-45f4-adc2-fa651baacac0",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+                "participants",
+                "0339a117-d11a-45f4-adc2-fa651baacac0"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "add",
+          "id": "b7b4e730-c3a5-4602-b38f-8217f1183823",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n        \"0339a117-d11a-45f4-adc2-fa651baacac0\",\n        \"4197cc73-e3b6-4d38-a072-f4fe32ccce9f\"\n    ]\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc/participants",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+                "participants"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "change ownership",
+          "id": "81c06dd4-a487-4cee-8bd3-7aae44e4deb6",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"owner\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc/participants/0339a117-d11a-45f4-adc2-fa651baacac0",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+                "participants",
+                "0339a117-d11a-45f4-adc2-fa651baacac0"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "id": "7af1af2c-eefb-4c21-b578-7bfdc433b83a",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/conversations/84f474ab-3d92-421b-889a-ce4e1b1fbfbc/participants/0339a117-d11a-45f4-adc2-fa651baacac0",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "conversations",
+                "84f474ab-3d92-421b-889a-ce4e1b1fbfbc",
+                "participants",
+                "0339a117-d11a-45f4-adc2-fa651baacac0"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "e51f4174-c1dc-496e-9947-e308123716a4"
+    }
+  ],
+  "variable": [
+    {
+      "id": "a05cb9d8-9646-47ad-b68f-b4ee947b717e",
+      "key": "baseURL",
+      "value": "http://localhost:10001"
+    },
+    {
+      "id": "ec4f4ed8-5b76-49d7-afe7-b0c9ccc627a4",
+      "key": "access_token",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}

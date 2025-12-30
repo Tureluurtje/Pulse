@@ -14,7 +14,7 @@ if project_root not in sys.path:
 # TODO: change UserProfileObj to UserProfile
 from api.database import SessionLocal
 from api.models.auth import User
-from api.schema.internal.user_service import UserProfileObj
+from api.schema.internal.users import UserProfileObj
 from api.services.auth_service import register_user
 from api.services.users_service import get_user_profile, get_all_users
 from api.services.conversations_service import create_conversation_service, get_all_conversations_service

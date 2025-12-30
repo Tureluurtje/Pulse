@@ -1,3 +1,3 @@
 # schema.internal package
 
-from .conversations import conversationObject # type: ignore[reportUnusedImport]
+from .conversations import ConversationDetail, ConversationPreview # type: ignore[reportUnusedImport]

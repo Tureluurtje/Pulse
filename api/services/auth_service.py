@@ -96,7 +96,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     try:
         result = _ph.verify(hash=hashed_password, password=plain_password)
-        return True
+        return result
     except (VerifyMismatchError, InvalidHashError, VerificationError):
         return False
 

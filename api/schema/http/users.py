@@ -1,28 +1,33 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, Field
 from typing import Optional
 from datetime import datetime
-from uuid import UUID, uuid4
 
-class Claims(BaseModel):
-    sub: str
-    exp: int
-
-class UserProfileResponse(BaseModel):
-    id: UUID = uuid4()
-    user_id: UUID = uuid4()
+class UpdateUserProfileRequest(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    email: str
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
     bio: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
+    date_of_birth: Optional[datetime] = Field(None, description="Date in DD-MM-YYYY format")
     location: Optional[str] = None
     website: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
 
-    class ConfigDict:
+    @field_validator('date_of_birth', mode='before')
+    @classmethod
+    def validate_date_of_birth(cls, v):
+        if v is None or v == "":
+            return None
+
+        if isinstance(v, datetime):
+            return v
+
+        if not isinstance(v, str):
+            raise ValueError("date_of_birth must be a string in DD-MM-YYYY format")
+
+        try:
+            return datetime.strptime(v, "%d-%m-%Y")
+        except ValueError:
+            raise ValueError("date_of_birth must be in DD-MM-YYYY format (e.g., 04-12-2025)")
+
+    class Config:
         from_attributes = True
-        # TODO: fix "Type of "json_encoders" is partially unknown" type warning
-        json_encoders = {UUID: lambda u: str(object=u)} # type: ignore

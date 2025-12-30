@@ -5,7 +5,8 @@ from datetime import datetime
 from uuid import UUID
 from fastapi import HTTPException, status
 from ..services.participants_service import get_user_role, check_user_in_conversation
-from ..services.conversations_service import get_conversation_by_message
+from ..schema.internal.messages import MessagePreview
+from ..models.messages import Message
 
 def get_all_messages_service(
     conversation_id: UUID,
@@ -13,7 +14,7 @@ def get_all_messages_service(
     limit: Optional[int] = 50,
     offset: Optional[int] = 0,
     before: Optional[datetime] = None
-) -> List[Message]:
+) -> List[MessagePreview]:
     """Retrieve messages for a conversation with optional pagination and time filter.
 
     The function verifies the requesting user's membership in the
@@ -35,31 +36,41 @@ def get_all_messages_service(
             (HTTP 401).
     """
     db = SessionLocal()
-    
+
     in_conversation = check_user_in_conversation(
         conversation_id=conversation_id,
         user_id=user_id,
         db=db
     )
-    
+
     if not in_conversation:
         raise HTTPException(
             status_code=401,
             detail="Not authorized"
         )
-    
+
     query = db.query(Message).filter(Message.conversation_id == conversation_id)
 
     if before:
         query = query.filter(Message.created_at < before)
 
     messages = query.order_by(Message.created_at.desc()).offset(offset=offset).limit(limit=limit).all()
-    return messages
+    db.close()
+    return [
+        MessagePreview(
+            id=message.id,
+            conversation_id=message.conversation_id,
+            sender_id=message.sender_id,
+            content=message.content,
+            edited_at=message.edited_at,
+            created_at=message.created_at
+        ) for message in messages
+    ]
 
 def get_single_message_service(
     message_id: UUID,
     user_id: UUID
-) -> Message:
+) -> MessagePreview:
     """Return a single message if the requesting user belongs to its conversation.
 
     Args:
@@ -74,24 +85,29 @@ def get_single_message_service(
             message (HTTP 401) or the message cannot be found (HTTP 404).
     """
     db = SessionLocal()
-    
-    conversation_id = get_conversation_by_message(
-        message_id=message_id,
-        db=db
-    )
-    
+
+    conversation_id = db.query(Message.conversation_id).filter(
+        Message.id == message_id
+    ).scalar()
+
+    if not conversation_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Message with id {message_id} not found or has no associated conversation"
+        )
+
     in_conversation = check_user_in_conversation(
         conversation_id=conversation_id,
         user_id=user_id,
         db=db
     )
-    
+
     if not in_conversation:
         raise HTTPException(
             status_code=401,
             detail="Not authorized"
         )
-    
+
     message = db.query(Message).filter(Message.id == message_id).first()
 
     if not message:
@@ -99,13 +115,53 @@ def get_single_message_service(
             status_code=404,
             detail="message not found"
         )
-    return message
+    db.close()
+    return MessagePreview(
+        id=message.id,
+        conversation_id=message.conversation_id,
+        sender_id=message.sender_id,
+        content=message.content,
+        edited_at=message.edited_at,
+        created_at=message.created_at
+    )
+
+def get_last_message_in_conversation_service(
+    conversation_id: UUID
+) -> Optional[MessagePreview]:
+    """Retrieve the most recent message in a conversation.
+
+    Args:
+        conversation_id: UUID of the conversation to query.
+
+    Returns:
+        The latest ``Message`` ORM instance, or ``None`` if no messages exist.
+    """
+    db = SessionLocal()
+
+    message = (
+        db.query(Message)
+        .filter(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.desc())
+        .first()
+    )
+
+    db.close()
+    if not message:
+        return None
+    return MessagePreview(
+        id=message.id,
+        conversation_id=message.conversation_id,
+        sender_id=message.sender_id,
+        content=message.content,
+        edited_at=message.edited_at,
+        created_at=message.created_at
+    )
 
 def send_message_service(
     sender_id: UUID,
     conversation_id: UUID,
     content: str
-) -> Message:
+) -> MessagePreview:
     """Persist a new message to the specified conversation.
 
     Args:
@@ -116,6 +172,7 @@ def send_message_service(
     Returns:
         The newly created ``Message`` ORM instance.
     """
+
     db = SessionLocal()
 
     new_message = Message(
@@ -129,12 +186,19 @@ def send_message_service(
     db.refresh(instance=new_message)
     db.close()
 
-    return new_message
+    return MessagePreview(
+        id=new_message.id,
+        conversation_id=new_message.conversation_id,
+        sender_id=new_message.sender_id,
+        content=new_message.content,
+        edited_at=new_message.edited_at,
+        created_at=new_message.created_at
+    )
 
 def edit_message_service(
     message_id: UUID,
     new_content: str
-) -> Message:
+) -> MessagePreview:
     """Update the content of an existing message.
 
     Args:
@@ -156,14 +220,22 @@ def edit_message_service(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="message not found"
         )
-    
+
     message.content = new_content
+    message.edited_at = datetime.utcnow()
 
     db.commit()
     db.refresh(message)
     db.close()
 
-    return message
+    return MessagePreview(
+        id=message.id,
+        conversation_id=message.conversation_id,
+        sender_id=message.sender_id,
+        content=message.content,
+        edited_at=message.edited_at,
+        created_at=message.created_at
+    )
 
 def delete_message_service(
     message_id: UUID,
@@ -184,17 +256,22 @@ def delete_message_service(
     """
     db = SessionLocal()
 
-    conversation_id = get_conversation_by_message(
-        message_id=message_id,
-        db=db
-    )
+    conversation_id = db.query(Message.conversation_id).filter(
+        Message.id == message_id
+    ).scalar()
+
+    if not conversation_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Message with id {message_id} not found or has no associated conversation"
+        )
 
     user_role = get_user_role(
         conversation_id=conversation_id,
         user_id=user_id,
         db=db
     )
-    
+
     if not user_role:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -206,10 +283,11 @@ def delete_message_service(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admins can edit conversations."
         )
-    
+
     message = db.query(Message).filter(Message.id == message_id).first()
-    
+
     db.delete(instance=message)
     db.commit()
+    db.close()
 
     return
